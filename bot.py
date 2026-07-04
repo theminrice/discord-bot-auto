@@ -3,10 +3,7 @@ from datetime import datetime
 
 # ==================== CONFIGURATION ====================
 TOKEN_AKUN = "TOKEN_REDACTED "
-
-# ID Channel Baru sesuai permintaan Anda
-CHANNEL_ID = "1521338078407430158"
-
+CHANNEL_ID = "733050809314705458"
 PESAN = "Sell surg-e 3 WL EACH AT ORUHC, STOCK 3K AND NEAR VEND"
 # =======================================================
 
@@ -28,7 +25,7 @@ def kirim_pesan():
         response = requests.post(url, json=payload, headers=headers)
         
         if response.status_code == 200:
-            print(f"[{waktu_sekarang}] [BERHASIL] Pesan otomatis terkirim ke channel baru.")
+            print(f"[{waktu_sekarang}] [BERHASIL] Pesan otomatis terkirim.")
         elif response.status_code == 429:
             print(f"[{waktu_sekarang}] [RATE LIMIT] Terlalu banyak request. Discord meminta jeda.")
         else:
