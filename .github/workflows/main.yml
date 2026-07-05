@@ -1,24 +1,24 @@
-name: Run Discord Bot Every 2 Hours
+name: Run Bot 1 Every 2 Hours
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Berjalan otomatis setiap kelipatan 2 jam murni
-  workflow_dispatch: # Fitur tombol agar Anda bisa mengetes jalannya bot secara manual
+    - cron: '0 */2 * * *' # Berjalan setiap kelipatan 2 jam (Genap)
+  workflow_dispatch:
 
 jobs:
-  run-bot:
+  run-bot1:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run script
+      - name: Run Bot 1
         run: python bot.py
