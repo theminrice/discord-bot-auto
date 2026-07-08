@@ -5,10 +5,10 @@ from datetime import datetime
 # ==================== CONFIGURATION ====================
 TOKEN_AKUN = "TOKEN_REDACTED "
 CHANNEL_ID = "733050809314705458"
-PESAN = "Sell AT QWIFO
+PESAN = ""Sell AT QWIFO
 Legal brief 180:WL~6:  
 
-AT QWIFO"
+AT QWIFO""
 # =======================================================
 
 def kirim_pesan():
