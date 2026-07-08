@@ -4,7 +4,7 @@ from datetime import datetime
 
 # ==================== CONFIGURATION ====================
 TOKEN_AKUN = "TOKEN_REDACTED "
-CHANNEL_ID = "733050809314705458"
+CHANNEL_ID = "1521338078407430158"
 PESAN = "Sell surg-e 3 WL EACH AT ORUHC, STOCK 3K AND NEAR VEND"
 # =======================================================
 
