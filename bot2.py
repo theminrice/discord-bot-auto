@@ -1,10 +1,11 @@
 import requests
+import time
 from datetime import datetime
 
 # ==================== CONFIGURATION ====================
 TOKEN_AKUN = "TOKEN_REDACTED "
-CHANNEL_ID = "733050809314705458"
-PESAN = "SELL SURG-E 3WL AT QWIFO, HAVE TONS AND NO LINK"
+CHANNEL_ID = "1521338078407430158"
+PESAN = "SELL SURG-E 3WL AT QWIFO, HAVE TONS AND IF U BUYALL DM ME YOUR RATE"
 # =======================================================
 
 def kirim_pesan():
@@ -25,14 +26,27 @@ def kirim_pesan():
         response = requests.post(url, json=payload, headers=headers)
         
         if response.status_code == 200:
-            print(f"[{waktu_sekarang}] [BERHASIL] Pesan otomatis terkirim.")
+            print(f"[{waktu_sekarang}] [BERHASIL] Pesan otomatis terkirim ke channel.")
+            return True
+            
         elif response.status_code == 429:
-            print(f"[{waktu_sekarang}] [RATE LIMIT] Terlalu banyak request. Discord meminta jeda.")
+            # Mengambil informasi berapa lama harus menunggu dari respon Discord
+            data_respon = response.json()
+            jeda_detik = data_respon.get("retry_after", 60) # Default 60 detik jika tidak ada data
+            
+            print(f"[{waktu_sekarang}] [RATE LIMIT] Terkena limit. Menunggu {jeda_detik} detik sebelum mencoba lagi...")
+            time.sleep(jeda_detik)
+            
+            # Mencoba mengirim ulang sekali lagi setelah jeda selesai
+            return kirim_pesan()
+            
         else:
             print(f"[{waktu_sekarang}] [GAGAL] Status {response.status_code}: {response.text}")
+            return False
             
     except Exception as e:
         print(f"[{waktu_sekarang}] [ERROR] Terjadi kesalahan: {e}")
+        return False
 
 if __name__ == "__main__":
     kirim_pesan()
