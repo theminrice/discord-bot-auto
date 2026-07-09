@@ -3,7 +3,6 @@ on:
   schedule:
     - cron: '0 */2 * * *'
   workflow_dispatch:
-
 jobs:
   run-bot:
     runs-on: ubuntu-latest
@@ -18,7 +17,7 @@ jobs:
         run: pip install requests
       - name: Run script
         env:
-          TOKEN_AKUN: ${{ secrets.TOKEN_REDACTED  }}
-          CHANNEL_ID: ${{ secrets.733050809314705458 }}
-          SERVER_FORWARD_ID: ${{ secrets.1521338078407430158 }}
+          TOKEN_AKUN: ${{ secrets.BOT1_TOKEN }}
+          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+          SERVER_FORWARD_ID: ${{ secrets.FORWARD_ID }}
         run: python bot.py
