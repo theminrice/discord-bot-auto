@@ -1,91 +1,86 @@
+import os
 import requests
+import time
 from datetime import datetime
 
-# ==================== CONFIGURATION ====================
-TOKEN_AKUN = "TOKEN_REDACTED "
-CHANNEL_IKLAN_ID = "733050809314705458"
-SERVER_FORWARD_ID = "1521338078407430158" # Channel di server Anda untuk menerima terusan DM
+# ========== AMBIL DARI ENV (GITHUB SECRETS) ==========
+TOKEN_AKUN = os.environ.get("TOKEN_AKUN")
+CHANNEL_ID = os.environ.get("CHANNEL_ID")
+SERVER_FORWARD_ID = os.environ.get("SERVER_FORWARD_ID")
 
-PESAN_IKLAN = """
+if not TOKEN_AKUN or not CHANNEL_ID or not SERVER_FORWARD_ID:
+    raise Exception("Missing env variables! Cek Secrets untuk BOT2.")
+
+PESAN = """
 **SURG-E 3 <:WL:880251447470596157>   
-SELL GO <:Arrow:850540193626193941>  **QWIFO<:Verified:1000267030550827128>**
-SEll DROPPED UR RATE DM ME
-Note: Not In Vend  = <:Sold:1432438946184298566> <:Sold:1432438946184298566>"""
-# =======================================================
+SELL GO <:Arrow:850540193626193941>  **ORUHC<:Verified:1000267030550827128>**
+Note: Not In Vend = <:Sold:1432438946184298566> <:Sold:1432438946184298566>"""
 
 headers = {
     "Authorization": TOKEN_AKUN,
     "Content-Type": "application/json"
 }
 
-def kirim_pesan(channel_id, konten):
-    """Fungsi untuk mengirim pesan ke Discord"""
-    url = f"https://discord.com/api/v9/channels/{channel_id}/messages"
+def kirim_pesan(target_channel_id, konten):
+    url = f"https://discord.com/api/v9/channels/{target_channel_id}/messages"
     payload = {"content": konten}
     try:
-        res = requests.post(url, json=payload, headers=headers)
-        if res.status_code == 429:
-            import time
-            jeda = res.json().get("retry_after", 5)
-            time.sleep(jeda)
-            return kirim_pesan(channel_id, konten)
-        return res.status_code == 200
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            return True
+        elif response.status_code == 429:
+            data = response.json()
+            wait = data.get("retry_after", 60)
+            print(f"[RATE LIMIT BOT2] Tunggu {wait}s")
+            time.sleep(wait)
+            return kirim_pesan(target_channel_id, konten)
+        else:
+            print(f"[GAGAL BOT2] {response.status_code} – {response.text}")
+            with open("error_bot2.log", "a") as f:
+                f.write(f"{datetime.now()} - Gagal kirim: {response.text}\n")
+            return False
     except Exception as e:
-        print(f"[ERROR SEND] {e}")
+        print(f"[ERROR BOT2] {e}")
         return False
 
 def periksa_dan_teruskan_dm():
-    """Mengambil daftar DM masuk terbaru dan meneruskannya ke server Anda"""
-    # Mengambil daftar chat/DM terakhir (Private Channels)
-    url_dm_list = "https://discord.com/api/v9/users/@me/channels"
-    waktu_sekarang = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
+    url_dm = "https://discord.com/api/v9/users/@me/channels"
     try:
-        res_dm = requests.get(url_dm_list, headers=headers)
-        if res_dm.status_code != 200:
-            print(f"[{waktu_sekarang}] [FORWARD] Gagal mengambil daftar DM. Status: {res_dm.status_code}")
+        res = requests.get(url_dm, headers=headers)
+        if res.status_code != 200:
+            print(f"[FORWARD BOT2] Gagal ambil DM – {res.status_code}")
             return
-            
-        dm_channels = res_dm.json()
-        
-        # Periksa pesan terakhir di setiap obrolan DM (maksimal 5 DM teratas agar hemat limit)
-        for chat in dm_channels[:5]:
-            channel_id = chat["id"]
-            
-            # Jika ini adalah DM grup atau tipenya bukan DM personal (type 1 = DM personal)
+        dms = res.json()
+        for chat in dms[:5]:
             if chat.get("type") != 1:
                 continue
-                
-            # Ambil detail user pengirim DM
-            user_info = chat.get("recipients", [{}])[0]
-            username = user_info.get("username", "Unknown")
-            
-            # Ambil pesan paling terakhir dari channel DM ini
-            url_messages = f"https://discord.com/api/v9/channels/{channel_id}/messages?limit=1"
-            res_msg = requests.get(url_messages, headers=headers)
-            
-            if res_msg.status_code == 200 and res_msg.json():
-                last_msg = res_msg.json()[0]
-                # Pastikan pesan terakhir BUKAN dari Anda sendiri
-                if last_msg.get("author", {}).get("id") != "1076319992498372680":
-                    konten_dm = last_msg.get("content", "")
-                    
-                    # Kirim laporan terusan ke server Anda
-                    teks_terusan = f"📩 **[DM TERBARU DETEKSI]** dari **{username}** (Channel ID: `{channel_id}`):\n> {konten_dm}"
-                    kirim_pesan(SERVER_FORWARD_ID, teks_terusan)
-                    print(f"[{waktu_sekarang}] [FORWARD] Berhasil meneruskan DM dari {username}")
-                    
+            ch_id = chat["id"]
+            user = chat.get("recipients", [{}])[0]
+            name = user.get("username", "Unknown")
+            url_msg = f"https://discord.com/api/v9/channels/{ch_id}/messages?limit=1"
+            r_msg = requests.get(url_msg, headers=headers)
+            if r_msg.status_code == 200 and r_msg.json():
+                last = r_msg.json()[0]
+                # Ganti ID di bawah dengan ID akun BOT2 yang sebenarnya
+                if last.get("author", {}).get("id") != "1437652796391292998":
+                    konten = last.get("content", "")
+                    teks = f"📩 DM BOT2 dari **{name}** (`{ch_id}`):\n> {konten}"
+                    kirim_pesan(SERVER_FORWARD_ID, teks)
+                    print(f"[FORWARD BOT2] DM dari {name} terkirim")
     except Exception as e:
-        print(f"[ERROR DM] Terjadi kesalahan saat membaca DM: {e}")
+        print(f"[ERROR DM BOT2] {e}")
 
 if __name__ == "__main__":
-    waktu = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    # 1. Jalankan pengiriman iklan otomatis
-    if kirim_pesan(CHANNEL_IKLAN_ID, PESAN_IKLAN):
-        print(f"[{waktu}] [IKLAN] Sukses terkirim.")
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # Validasi token
+    test = requests.get("https://discord.com/api/v9/users/@me", headers=headers)
+    if test.status_code != 200:
+        print(f"[{now}] BOT2 TOKEN TIDAK VALID/REVOKED! Stop.")
+        exit(1)
+    # Kirim iklan
+    if kirim_pesan(CHANNEL_ID, PESAN):
+        print(f"[{now}] Iklan BOT2 sukses.")
     else:
-        print(f"[{waktu}] [IKLAN] Gagal kirim iklan.")
-        
-    # 2. Cek apakah ada DM baru masuk untuk diteruskan
+        print(f"[{now}] Iklan BOT2 gagal.")
+    # Forward DM
     periksa_dan_teruskan_dm()
