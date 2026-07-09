@@ -12,7 +12,7 @@ if not TOKEN_AKUN or not CHANNEL_ID or not SERVER_FORWARD_ID:
     raise Exception("Missing env variables! Cek Secrets untuk BOT2.")
 
 PESAN = """
-**SURG-E 3 <:WL:880251447470596157>   
+**SURG-E 3** <:WL:880251447470596157>   
 AT QWIFO<:correct:999455082032672843>"""
 
 headers = {
