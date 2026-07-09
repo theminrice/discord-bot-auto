@@ -1,7 +1,7 @@
 name: Run Discord Bot 2 Every Odd Hour
 on:
   schedule:
-    - cron: '0 1-23/2 * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 jobs:
   run-bot2:
