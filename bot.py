@@ -52,21 +52,44 @@ def periksa_dan_teruskan_dm():
             print(f"[FORWARD] Gagal ambil DM – {res.status_code}")
             return
         dms = res.json()
-        for chat in dms[:5]:
-            if chat.get("type") != 1:
+        forwarded = 0
+        # Ambil 15 channel teratas biar aman, karena bisa banyak bot welcome
+        for chat in dms[:15]:
+            if chat.get("type") != 1:  # Lewati kalau bukan DM personal
                 continue
-            channel_id = chat["id"]
+            ch_id = chat["id"]
             user = chat.get("recipients", [{}])[0]
             name = user.get("username", "Unknown")
-            url_msg = f"https://discord.com/api/v9/channels/{channel_id}/messages?limit=1"
+            is_user_bot = user.get("bot", False)  # Cek apakah pengirimnya bot (MEE6 dll)
+
+            # Ambil pesan terakhir di channel DM itu
+            url_msg = f"https://discord.com/api/v9/channels/{ch_id}/messages?limit=1"
             r_msg = requests.get(url_msg, headers=headers)
             if r_msg.status_code == 200 and r_msg.json():
                 last = r_msg.json()[0]
-                if last.get("author", {}).get("id") != "1437652796391292998":  # ID akun lo
-                    konten = last.get("content", "")
-                    teks = f"📩 DM dari **{name}** (`{channel_id}`):\n> {konten}"
-                    kirim_pesan(SERVER_FORWARD_ID, teks)
-                    print(f"[FORWARD] DM dari {name} terkirim")
+                author = last.get("author", {})
+                author_id = author.get("id")
+                is_author_bot = author.get("bot", False)
+
+                # SKIP jika:
+                # - pesan dari diri sendiri (ID bot lo)
+                # - pengirim adalah akun BOT (MEE6, Dyno, Carl-bot, dll)
+                if author_id == "1437652796391292998" or is_author_bot or is_user_bot:
+                    continue
+
+                konten = last.get("content", "")
+                if not konten.strip():  # Lewati kalau cuma embed/gambar
+                    continue
+
+                # Kirim ke server tujuan
+                teks = f"📩 DM DARI MANUSIA **{name}** (`{ch_id}`):\n> {konten}"
+                kirim_pesan(SERVER_FORWARD_ID, teks)
+                print(f"[FORWARD] DM terbaru dari {name} terkirim")
+                forwarded += 1
+                break  # Hanya forward 1 DM terbaru dari manusia, berhenti setelah dapat
+
+        if forwarded == 0:
+            print("[FORWARD] Tidak ada DM baru dari manusia.")
     except Exception as e:
         print(f"[ERROR DM] {e}")
 
