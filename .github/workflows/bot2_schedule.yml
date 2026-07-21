@@ -5,6 +5,10 @@ on:
     - cron: '0 1-23/2 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: bot2-run
+  cancel-in-progress: false
+
 jobs:
   run-bot2:
     runs-on: ubuntu-latest
