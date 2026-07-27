@@ -5,24 +5,23 @@ from datetime import datetime
 
 # ============ AMBIL DARI ENV (GITHUB SECRETS) ============
 TOKEN_AKUN = os.environ.get("TOKEN_AKUN")
-CHANNEL_ID = os.environ.get("CHANNEL_ID")
 
-# 2 Channel ID tujuan yang berbeda
-SERVER_FORWARD_ID_1 = os.environ.get("SERVER_FORWARD_ID_1")
-SERVER_FORWARD_ID_2 = os.environ.get("SERVER_FORWARD_ID_2")
+CHANNEL_PROMOSI_1 = os.environ.get("CHANNEL_PROMOSI_1")
+CHANNEL_PROMOSI_2 = os.environ.get("CHANNEL_PROMOSI_2")
+SERVER_FORWARD_ID = os.environ.get("SERVER_FORWARD_ID")
 
-if not TOKEN_AKUN or not CHANNEL_ID or not SERVER_FORWARD_ID_1 or not SERVER_FORWARD_ID_2:
-    raise Exception("Environment variable ada yang kosong! Cek kembali Secrets Anda.")
+if not TOKEN_AKUN or not CHANNEL_PROMOSI_1 or not CHANNEL_PROMOSI_2 or not SERVER_FORWARD_ID:
+    raise Exception("Environment variable ada yang kosong! Cek kembali GitHub Secrets Anda.")
 
-# Pesan untuk Channel ID Utama
-PESAN_UTAMA = """
+# Pesan untuk Channel Promosi 1
+PESAN_PROMOSI_1 = """
 **SURG E 3 <:WL:880251447470596157>
 SELL GO <:Arrow:850540193626193941>  **ORUHC<:Verified:1000267030550827128>**
 Note: Not In Vend = <:Sold:1432438946184298566> <:Sold:1432438946184298566>"""
 
-# Pesan berbeda yang akan dikirim ke SERVER_FORWARD_ID_2 (misal: Log / Pesan Lain)
-PESAN_KHUSUS_CHANNEL_2 = """
-**SELL MEGAPHONE 2000  **<:WL:880251447470596157>  OR 20 <:DL:880251434380165130> 
+# Pesan berbeda untuk Channel Promosi 2
+PESAN_PROMOSI_2 = """
+**SELL MEGAPHONE 2000  **<:WL:880251447470596157>  OR 20 <:DL:880251434380165130>  
 AT <:Arrow:850540193626193941> ORUHC
 Note: Not In Vend = <:Sold:1432438946184298566> <:Sold:1432438946184298566>**"""
 
@@ -98,16 +97,15 @@ def periksa_dan_teruskan_dm():
                     konten = msg.get("content", "")
                     if konten.strip():
                         target_msg = konten
-                        break 
+                        break  
                 
                 if target_msg:
-                    teks = f"📩 DM DARI MANUSIA **{name}** (`{ch_id}`):\n> {target_msg}"
+                    teks = f"📩 **DM DARI PEMBELI ({name})** (`{ch_id}`):\n> {target_msg}"
                     
-                    # Teruskan DM ke Channel 1 dan Channel 2 (bisa dikirim dengan teks sama atau dibedakan)
-                    kirim_pesan(SERVER_FORWARD_ID_1, teks)
-                    kirim_pesan(SERVER_FORWARD_ID_2, f"📢 **[Log Terusan DM]**\n{teks}")
+                    # Teruskan DM ke server Anda
+                    kirim_pesan(SERVER_FORWARD_ID, teks)
                             
-                    print(f"[FORWARD] DM terbaru dari {name} berhasil diteruskan ke kedua channel.")
+                    print(f"[FORWARD] DM terbaru dari {name} berhasil diteruskan ke server.")
                     forwarded += 1
                     break  
 
@@ -125,14 +123,21 @@ if __name__ == "__main__":
         print(f"[{now}] TOKEN TIDAK VALID atau REVOKED! Stop.")
         exit(1)
         
-    # Kirim iklan ke channel utama
-    if kirim_pesan(CHANNEL_ID, PESAN_UTAMA):
-        print(f"[{now}] Iklan utama sukses.")
+    # 1. Kirim Promosi 1 ke Channel Promosi 1
+    if kirim_pesan(CHANNEL_PROMOSI_1, PESAN_PROMOSI_1):
+        print(f"[{now}] Promosi 1 sukses.")
     else:
-        print(f"[{now}] Iklan utama gagal.")
+        print(f"[{now}] Promosi 1 gagal.")
         
-    # Kirim pesan berbeda ke SERVER_FORWARD_ID_2 (opsional, misal pesan inisialisasi)
-    kirim_pesan(SERVER_FORWARD_ID_2, PESAN_KHUSUS_CHANNEL_2)
+    # Jeda waktu agar pengiriman promosi tidak bersamaan (10 detik)
+    print("[INFO] Menunggu jeda sebelum mengirim promosi kedua...")
+    time.sleep(10)
+
+    # 2. Kirim Promosi 2 ke Channel Promosi 2
+    if kirim_pesan(CHANNEL_PROMOSI_2, PESAN_PROMOSI_2):
+        print(f"[{now}] Promosi 2 sukses.")
+    else:
+        print(f"[{now}] Promosi 2 gagal.")
         
-    # Jalankan pengecekan DM
+    # 3. Jalankan pengecekan dan penerusan DM pembeli
     periksa_dan_teruskan_dm()
