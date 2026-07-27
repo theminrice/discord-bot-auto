@@ -21,7 +21,7 @@ AT QWIFO<:correct:999455082032672843>"""
 
 # Pesan khusus / log yang dikirim ke SERVER_FORWARD_ID_2 (bisa diubah sesuai keinginan)
 PESAN_KHUSUS_CHANNEL_2 = """
-SELL MEGAPHONE 2000  **<:WL:880251447470596157> OR 20 <:DL:880251434380165130>
+SELL MEGAPHONE 2000  **<:WL:880251447470596157> OR 20 <:DL:880251434380165130>
 AT QWIFO<:correct:999455082032672843>"""
 
 headers = {
@@ -128,14 +128,21 @@ if __name__ == "__main__":
         print(f"[{now}] BOT2 TOKEN TIDAK VALID/REVOKED! Stop.")
         exit(1)
         
-    # Kirim iklan utama
+    # 1. Kirim iklan utama ke CHANNEL_ID
     if kirim_pesan(CHANNEL_ID, PESAN_UTAMA):
-        print(f"[{now}] Iklan BOT2 sukses.")
+        print(f"[{now}] Iklan utama BOT2 sukses.")
     else:
-        print(f"[{now}] Iklan BOT2 gagal.")
+        print(f"[{now}] Iklan utama BOT2 gagal.")
         
-    # Kirim pesan khusus ke channel tujuan kedua (Opsional)
-    kirim_pesan(SERVER_FORWARD_ID_2, PESAN_KHUSUS_CHANNEL_2)
+    # Jeda waktu 10 detik agar pengiriman pesan tidak bersamaan
+    print("[INFO] Menunggu jeda sebelum mengirim pesan khusus kedua...")
+    time.sleep(10)
 
-    # Forward DM
+    # 2. Kirim pesan khusus ke SERVER_FORWARD_ID_2
+    if kirim_pesan(SERVER_FORWARD_ID_2, PESAN_KHUSUS_CHANNEL_2):
+        print(f"[{now}] Pesan khusus channel 2 sukses.")
+    else:
+        print(f"[{now}] Pesan khusus channel 2 gagal.")
+
+    # 3. Forward DM masuk
     periksa_dan_teruskan_dm()
