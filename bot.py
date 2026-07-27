@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 # ============ AMBIL DARI ENV (GITHUB SECRETS) ============
-TOKEN_AKUN = os.environ.get("TOKEN_AKUN")
+TOKEN_AKUN = os.environ.get("BOT1_TOKEN")
 
 CHANNEL_PROMOSI_1 = os.environ.get("CHANNEL_PROMOSI_1")
 CHANNEL_PROMOSI_2 = os.environ.get("CHANNEL_PROMOSI_2")
