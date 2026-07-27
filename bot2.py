@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 # ============ AMBIL DARI ENV (GITHUB SECRETS) ============
-TOKEN_AKUN = os.environ.get("TOKEN_AKUN")
+TOKEN_AKUN = os.environ.get("BOT2_TOKEN")
 CHANNEL_ID = os.environ.get("CHANNEL_ID")
 
 # 2 Channel ID Tujuan Berbeda (Ganti nama Secret di GitHub sesuai ini)
