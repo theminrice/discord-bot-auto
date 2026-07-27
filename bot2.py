@@ -21,8 +21,8 @@ AT QWIFO<:correct:999455082032672843>"""
 
 # Pesan khusus / log yang dikirim ke SERVER_FORWARD_ID_2 (bisa diubah sesuai keinginan)
 PESAN_KHUSUS_CHANNEL_2 = """
-**[BOT 2 - STATUS LOG]**
-Sistem pengecekan DM & Iklan Bot 2 Berjalan Normal 🟢"""
+SELL MEGAPHONE 2000  **<:WL:880251447470596157> OR 20 <:DL:880251434380165130>
+AT QWIFO<:correct:999455082032672843>"""
 
 headers = {
     "Authorization": TOKEN_AKUN,
