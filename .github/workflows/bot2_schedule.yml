@@ -24,7 +24,8 @@ jobs:
 
       - name: Run script
         env:
-          TOKEN_AKUN: ${{ secrets.BOT2_TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-          SERVER_FORWARD_ID: ${{ secrets.FORWARD_ID }}
+          BOT2_TOKEN: ${{ secrets.BOT2_TOKEN }}
+          CHANNEL_PROMOSI_1: ${{ secrets.CHANNEL_PROMOSI_1 }}
+          CHANNEL_PROMOSI_2: ${{ secrets.CHANNEL_PROMOSI_2 }}
+          SERVER_FORWARD_ID: ${{ secrets.SERVER_FORWARD_ID }}
         run: python bot2.py
