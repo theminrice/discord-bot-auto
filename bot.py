@@ -22,9 +22,9 @@ Note: Not In Vend = <:Sold:1432438946184298566> <:Sold:1432438946184298566>"""
 
 # Pesan berbeda yang akan dikirim ke SERVER_FORWARD_ID_2 (misal: Log / Pesan Lain)
 PESAN_KHUSUS_CHANNEL_2 = """
-**[INFO OTOMATIS]**
-Aktivitas pengecekan DM dan iklan sedang berjalan.
-Status: Aktif 🟢"""
+**SELL MEGAPHONE 2000  **<:WL:880251447470596157>  OR 20 <:DL:880251434380165130> 
+AT <:Arrow:850540193626193941> ORUHC
+Note: Not In Vend = <:Sold:1432438946184298566> <:Sold:1432438946184298566>**"""
 
 headers = {
     "Authorization": TOKEN_AKUN,
