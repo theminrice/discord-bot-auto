@@ -3,17 +3,26 @@ import requests
 import time
 from datetime import datetime
 
-# ========== AMBIL DARI ENV (GITHUB SECRETS) ==========
+# ============ AMBIL DARI ENV (GITHUB SECRETS) ============
 TOKEN_AKUN = os.environ.get("TOKEN_AKUN")
 CHANNEL_ID = os.environ.get("CHANNEL_ID")
-SERVER_FORWARD_ID = os.environ.get("SERVER_FORWARD_ID")
 
-if not TOKEN_AKUN or not CHANNEL_ID or not SERVER_FORWARD_ID:
-    raise Exception("Missing env variables! Cek Secrets untuk BOT2.")
+# 2 Channel ID Tujuan Berbeda (Ganti nama Secret di GitHub sesuai ini)
+SERVER_FORWARD_ID_1 = os.environ.get("SERVER_FORWARD_ID_1")
+SERVER_FORWARD_ID_2 = os.environ.get("SERVER_FORWARD_ID_2")
 
-PESAN = """
+if not TOKEN_AKUN or not CHANNEL_ID or not SERVER_FORWARD_ID_1 or not SERVER_FORWARD_ID_2:
+    raise Exception("Missing env variables! Cek Secrets untuk BOT2 (Pastikan SERVER_FORWARD_ID_1 & 2 terisi).")
+
+# Pesan iklan utama untuk CHANNEL_ID
+PESAN_UTAMA = """
 SURG E 3 **<:WL:880251447470596157>
 AT QWIFO<:correct:999455082032672843>"""
+
+# Pesan khusus / log yang dikirim ke SERVER_FORWARD_ID_2 (bisa diubah sesuai keinginan)
+PESAN_KHUSUS_CHANNEL_2 = """
+**[BOT 2 - STATUS LOG]**
+Sistem pengecekan DM & Iklan Bot 2 Berjalan Normal 🟢"""
 
 headers = {
     "Authorization": TOKEN_AKUN,
@@ -21,7 +30,7 @@ headers = {
 }
 
 def kirim_pesan(target_channel_id, konten):
-    url = f"https://discord.com/api/v9/channels/{target_channel_id}/messages"
+    url = f"https://discord.com/api/v9/channels/{target_channel_id.strip()}/messages"
     payload = {"content": konten}
     try:
         response = requests.post(url, json=payload, headers=headers)
@@ -43,65 +52,90 @@ def kirim_pesan(target_channel_id, konten):
         return False
 
 def periksa_dan_teruskan_dm():
+    # Ambil ID akun sendiri secara otomatis agar filter pengiriman akurat
+    res_me = requests.get("https://discord.com/api/v9/users/@me", headers=headers)
+    my_id = res_me.json().get("id") if res_me.status_code == 200 else None
+
     url_dm = "https://discord.com/api/v9/users/@me/channels"
     try:
         res = requests.get(url_dm, headers=headers)
         if res.status_code != 200:
-            print(f"[FORWARD] Gagal ambil DM – {res.status_code}")
+            print(f"[FORWARD BOT2] Gagal ambil DM – {res.status_code}")
             return
+        
         dms = res.json()
         forwarded = 0
-        # Ambil 15 channel teratas biar aman, karena bisa banyak bot welcome
-        for chat in dms[:15]:
-            if chat.get("type") != 1:  # Lewati kalau bukan DM personal
+        
+        # Ambil 30 channel teratas agar DM dari manusia tidak tertimbun bot lain
+        for chat in dms[:30]:
+            if chat.get("type") != 1:  
                 continue
+            
             ch_id = chat["id"]
-            user = chat.get("recipients", [{}])[0]
+            recipients = chat.get("recipients", [{}])
+            if not recipients:
+                continue
+                
+            user = recipients[0]
             name = user.get("username", "Unknown")
-            is_user_bot = user.get("bot", False)  # Cek apakah pengirimnya bot (MEE6 dll)
+            is_user_bot = user.get("bot", False)  
 
-            # Ambil pesan terakhir di channel DM itu
-            url_msg = f"https://discord.com/api/v9/channels/{ch_id}/messages?limit=1"
+            # Ambil beberapa pesan terakhir untuk memastikan pesan valid terbaca
+            url_msg = f"https://discord.com/api/v9/channels/{ch_id}/messages?limit=3"
             r_msg = requests.get(url_msg, headers=headers)
+            
             if r_msg.status_code == 200 and r_msg.json():
-                last = r_msg.json()[0]
-                author = last.get("author", {})
-                author_id = author.get("id")
-                is_author_bot = author.get("bot", False)
+                messages = r_msg.json()
+                target_msg = None
+                
+                for last in messages:
+                    author = last.get("author", {})
+                    author_id = author.get("id")
+                    is_author_bot = author.get("bot", False)
 
-                # SKIP jika:
-                # - pesan dari diri sendiri (ID bot lo)
-                # - pengirim adalah akun BOT (MEE6, Dyno, Carl-bot, dll)
-                if author_id == "1076319992498372680" or is_author_bot or is_user_bot:
-                    continue
+                    # Skip jika pesan dari diri sendiri atau bot
+                    if author_id == my_id or is_author_bot or is_user_bot:
+                        continue
 
-                konten = last.get("content", "")
-                if not konten.strip():  # Lewati kalau cuma embed/gambar
-                    continue
+                    konten = last.get("content", "")
+                    if konten.strip():
+                        target_msg = konten
+                        break  # Dapatkan pesan valid dari manusia
 
-                # Kirim ke server tujuan
-                teks = f"📩 DM DARI MANUSIA **{name}** (`{ch_id}`):\n> {konten}"
-                kirim_pesan(SERVER_FORWARD_ID, teks)
-                print(f"[FORWARD] DM terbaru dari {name} terkirim")
-                forwarded += 1
-                break  # Hanya forward 1 DM terbaru dari manusia, berhenti setelah dapat
+                if target_msg:
+                    teks = f"📩 [BOT2] DM DARI MANUSIA **{name}** (`{ch_id}`):\n> {target_msg}"
+                    
+                    # Kirim ke 2 Channel ID Tujuan yang berbeda
+                    kirim_pesan(SERVER_FORWARD_ID_1, teks)
+                    kirim_pesan(SERVER_FORWARD_ID_2, f"🔄 **[Forward Log Channel 2]**\n{teks}")
+
+                    print(f"[FORWARD BOT2] DM terbaru dari {name} berhasil diteruskan ke 2 channel.")
+                    forwarded += 1
+                    break  # Hanya forward 1 DM terbaru dari manusia
 
         if forwarded == 0:
-            print("[FORWARD] Tidak ada DM baru dari manusia.")
+            print("[FORWARD BOT2] Tidak ada DM baru dari manusia.")
+            
     except Exception as e:
-        print(f"[ERROR DM] {e}")
+        print(f"[ERROR DM BOT2] {e}")
 
 if __name__ == "__main__":
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
     # Validasi token
     test = requests.get("https://discord.com/api/v9/users/@me", headers=headers)
     if test.status_code != 200:
         print(f"[{now}] BOT2 TOKEN TIDAK VALID/REVOKED! Stop.")
         exit(1)
-    # Kirim iklan
-    if kirim_pesan(CHANNEL_ID, PESAN):
+        
+    # Kirim iklan utama
+    if kirim_pesan(CHANNEL_ID, PESAN_UTAMA):
         print(f"[{now}] Iklan BOT2 sukses.")
     else:
         print(f"[{now}] Iklan BOT2 gagal.")
+        
+    # Kirim pesan khusus ke channel tujuan kedua (Opsional)
+    kirim_pesan(SERVER_FORWARD_ID_2, PESAN_KHUSUS_CHANNEL_2)
+
     # Forward DM
     periksa_dan_teruskan_dm()
